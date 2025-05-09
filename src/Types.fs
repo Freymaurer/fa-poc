@@ -47,3 +47,12 @@ type MapFile =
                     |> _.Split("; ") // can be manyOf relationships
             |}
         )
+
+type UserData =
+    {
+        Data: string [] []
+    } with
+    static member init () =
+        {
+            Data = [||]
+        }
