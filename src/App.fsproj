@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
         <None Include="index.html" />
+        <Compile Include="Types.fs" />
+        <Compile Include="MockData.fs" />
         <Compile Include="Extensions.fs" />
-        <Compile Include="Components.fs" />
+        <Compile Include="View.fs" />
         <Compile Include="Main.fs" />
     </ItemGroup>
     <ItemGroup>

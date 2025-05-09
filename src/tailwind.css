@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: dataplant --default, dataplant --prefersdark;
+}
+
+@plugin "daisyui/theme" {
+  name: "dataplant";
+  default: true;
+  prefersdark: true;
+  color-scheme: "light";
+  --color-base-100: oklch(27% 0.046 192.524);
+  --color-base-200: oklch(38% 0.063 188.416);
+  --color-base-300: oklch(43% 0.078 188.216);
+  --color-base-content: oklch(95% 0.051 180.801);
+  --color-primary: oklch(84% 0.143 164.978);
+  --color-primary-content: oklch(0% 0 0);
+  --color-secondary: oklch(83% 0.128 66.29);
+  --color-secondary-content: oklch(0% 0 0);
+  --color-accent: oklch(80% 0.105 251.813);
+  --color-accent-content: oklch(0% 0 0);
+  --color-neutral: oklch(51% 0.096 186.391);
+  --color-neutral-content: oklch(98% 0.014 180.72);
+  --color-info: oklch(54% 0.245 262.881);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(62% 0.194 149.214);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(66% 0.179 58.318);
+  --color-warning-content: oklch(100% 0 0);
+  --color-error: oklch(57% 0.245 27.325);
+  --color-error-content: oklch(100% 0 0);
+  --radius-selector: 2rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0rem;
+  --size-selector: 0.28125rem;
+  --size-field: 0.25rem;
+  --border: 1.5px;
+  --depth: 1;
+  --noise: 0;
+}
