@@ -3,12 +3,14 @@
         <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <None Include="index.html" />
+        <Compile Include="Constants.fs" />
         <Compile Include="Types.fs" />
         <Compile Include="MockData.fs" />
         <Compile Include="Extensions.fs" />
+        <Compile Include="Components.fs" />
         <Compile Include="View.fs" />
         <Compile Include="Main.fs" />
+        <None Include="index.html" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Feliz" Version="2.6.0" />
