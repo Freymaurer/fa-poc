@@ -8,7 +8,9 @@
         <Compile Include="MockData.fs" />
         <Compile Include="Extensions.fs" />
         <Compile Include="ReactContext.fs" />
-        <Compile Include="Components.fs" />
+        <Compile Include="components/Basic.fs" />
+        <Compile Include="components/LoadData.fs" />
+        <Compile Include="components/TransformData.fs" />
         <Compile Include="View.fs" />
         <Compile Include="Main.fs" />
         <None Include="index.html" />

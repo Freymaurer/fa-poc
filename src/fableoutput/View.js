@@ -4,13 +4,15 @@ import React from "react";
 import { createObj } from "./fable_modules/fable-library-js.4.19.0/Util.js";
 import { Interop_reactApi } from "./fable_modules/Feliz.2.6.0/Interop.fs.js";
 import { singleton as singleton_1, ofArray } from "./fable_modules/fable-library-js.4.19.0/List.js";
-import { React_contextProvider_138D2F56, useFeliz_React__React_useState_Static_1505, useReact_useMemo_10C6A43C, useReact_useContext_37FA55CF } from "./fable_modules/Feliz.2.6.0/React.fs.js";
-import { MapFile as MapFile_1, UserData } from "./ReactContext.js";
-import { singleton, delay, toList } from "./fable_modules/fable-library-js.4.19.0/Seq.js";
-import { Components_LoadData, Components_SelectIdColFromUserData } from "./Components.js";
+import { LoadData_Main } from "./components/LoadData.js";
+import { TransformData_Main } from "./components/TransformData.js";
+import { React_contextProvider_138D2F56, useFeliz_React__React_useState_Static_1505, useReact_useMemo_10C6A43C } from "./fable_modules/Feliz.2.6.0/React.fs.js";
 import { console_log_4E60E31B } from "./Extensions.js";
 import { MapFile } from "./MockData.js";
+import { Pages } from "./Types.js";
+import { UserData, MapFile as MapFile_1, Pages as Pages_1 } from "./ReactContext.js";
 import { unwrap } from "./fable_modules/fable-library-js.4.19.0/Option.js";
+import { singleton, append, delay, toList } from "./fable_modules/fable-library-js.4.19.0/Seq.js";
 
 export class View {
     constructor() {
@@ -32,19 +34,28 @@ export function View_Navbar() {
     }])])))], ["children", Interop_reactApi.Children.toArray(Array.from(elems_1))])])))], ["children", Interop_reactApi.Children.toArray(Array.from(elems_2))])])));
 }
 
-export function View_Hero() {
-    let elems_2, elems_1;
-    const userData = useReact_useContext_37FA55CF(UserData);
-    return createElement("div", createObj(ofArray([["className", "hero grow max-h-full overflow-hidden"], (elems_2 = [createElement("div", createObj(ofArray([["className", "hero-content text-center overflow-hidden max-h-full"], (elems_1 = toList(delay(() => {
-        let elems;
-        return (userData.data != null) ? singleton(createElement(Components_SelectIdColFromUserData, null)) : singleton(createElement("div", createObj(ofArray([["className", "max-w-md"], (elems = [createElement("h1", {
-            className: "text-5xl font-bold",
-            children: "Hello there!",
-        }), createElement("p", {
-            className: "py-6",
-            children: "Currently file upload is not supported. You can use provided mock data to explore beta features.",
-        }), createElement(Components_LoadData, null)], ["children", Interop_reactApi.Children.toArray(Array.from(elems))])]))));
-    })), ["children", Interop_reactApi.Children.toArray(Array.from(elems_1))])])))], ["children", Interop_reactApi.Children.toArray(Array.from(elems_2))])])));
+export function View_LoadDataView() {
+    let elems_2, elems_1, elems;
+    return createElement("div", createObj(ofArray([["className", "hero grow max-h-full overflow-hidden"], (elems_2 = [createElement("div", createObj(ofArray([["className", "hero-content text-center overflow-hidden"], (elems_1 = [createElement("div", createObj(ofArray([["className", "max-w-md"], (elems = [createElement("h1", {
+        className: "text-5xl font-bold",
+        children: "Hello there!",
+    }), createElement("p", {
+        className: "py-6",
+        children: "Currently file upload is not supported. You can use provided mock data to explore beta features.",
+    }), createElement(LoadData_Main, null)], ["children", Interop_reactApi.Children.toArray(Array.from(elems))])])))], ["children", Interop_reactApi.Children.toArray(Array.from(elems_1))])])))], ["children", Interop_reactApi.Children.toArray(Array.from(elems_2))])])));
+}
+
+export function View_SelectIdColView() {
+    let elems_2, value_2, elems_1, elems;
+    return createElement("div", createObj(ofArray([["className", "flex grow justify-center min-h-0"], (elems_2 = [createElement("div", createObj(ofArray([(value_2 = "container mx-auto bg-base-100 h-[90%] rounded-lg m-2 md:m-4 p-4 xl:p-8 shadow-lg overflow-hidden flex flex-col gap-2", ["className", value_2]), (elems_1 = [createElement("div", createObj(ofArray([["className", "prose"], (elems = [createElement("h3", {
+        children: ["Select ID column from your data!"],
+    }), createElement("small", {
+        children: ["Shows a preview of the first rows of the data."],
+    })], ["children", Interop_reactApi.Children.toArray(Array.from(elems))])]))), createElement(TransformData_Main, null)], ["children", Interop_reactApi.Children.toArray(Array.from(elems_1))])])))], ["children", Interop_reactApi.Children.toArray(Array.from(elems_2))])])));
+}
+
+export function View_AnnotationView() {
+    return createElement("div", {});
 }
 
 export function View_Main() {
@@ -56,9 +67,18 @@ export function View_Main() {
     const patternInput = useFeliz_React__React_useState_Static_1505(undefined);
     const userData = patternInput[0];
     const setUserData = patternInput[1];
-    return React_contextProvider_138D2F56(MapFile_1, mapFile, singleton_1(React_contextProvider_138D2F56(UserData, {
+    const patternInput_1 = useFeliz_React__React_useState_Static_1505(new Pages(0, []));
+    const setPage = patternInput_1[1];
+    const page = patternInput_1[0];
+    return React_contextProvider_138D2F56(Pages_1, {
+        data: page,
+        setData: setPage,
+    }, singleton_1(React_contextProvider_138D2F56(MapFile_1, mapFile, singleton_1(React_contextProvider_138D2F56(UserData, {
         data: unwrap(userData),
         setData: setUserData,
-    }, singleton_1(createElement("div", createObj(ofArray([["className", "h-screen bg-base-200 flex flex-col overflow-hidden"], (elems = [View_Navbar(), createElement(View_Hero, null)], ["children", Interop_reactApi.Children.toArray(Array.from(elems))])])))))));
+    }, singleton_1(createElement("div", createObj(ofArray([["className", "h-screen flex flex-col bg-base-300"], (elems = toList(delay(() => append(singleton(View_Navbar()), delay(() => {
+        const matchValue = page;
+        return (matchValue.tag === 1) ? singleton(createElement(View_SelectIdColView, null)) : ((matchValue.tag === 2) ? singleton(View_AnnotationView()) : singleton(createElement(View_LoadDataView, null)));
+    })))), ["children", Interop_reactApi.Children.toArray(Array.from(elems))])])))))))));
 }
 

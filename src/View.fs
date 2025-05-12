@@ -51,35 +51,56 @@ type View =
         ]
 
     [<ReactComponent>]
-    static member Hero() =
-        let userData = React.useContext(App.ReactContext.UserData)
+    static member LoadDataView() =
         Html.div [
             prop.className "hero grow max-h-full overflow-hidden"
             prop.children [
                 Html.div [
-                    prop.className "hero-content text-center overflow-hidden max-h-full"
+                    prop.className "hero-content text-center overflow-hidden"
                     prop.children [
-                        match userData.data with
-                        | None ->
-                            Html.div [
-                                prop.className "max-w-md"
-                                prop.children [
-                                    Html.h1 [ prop.className "text-5xl font-bold"; prop.text "Hello there!" ]
-                                    Html.p [
-                                        prop.className "py-6"
-                                        prop.text
-                                            "Currently file upload is not supported. \
-                                            You can use provided mock data to explore beta \
-                                            features."
-                                    ]
-                                    Components.LoadData()
+                        Html.div [
+                            prop.className "max-w-md"
+                            prop.children [
+                                Html.h1 [ prop.className "text-5xl font-bold"; prop.text "Hello there!" ]
+                                Html.p [
+                                    prop.className "py-6"
+                                    prop.text
+                                        "Currently file upload is not supported. \
+                                        You can use provided mock data to explore beta \
+                                        features."
                                 ]
+                                LoadData.Main()
                             ]
-                        | Some _ ->
-                            Components.SelectIdColFromUserData()
+                        ]
                     ]
                 ]
             ]
+        ]
+
+    [<ReactComponent>]
+    static member SelectIdColView() =
+        Html.div [
+            prop.className "flex grow justify-center min-h-0"
+            prop.children [
+                Html.div [
+                    prop.className "container mx-auto bg-base-100 h-[90%] rounded-lg m-2 md:m-4 p-4 xl:p-8 shadow-lg overflow-hidden flex flex-col gap-2"
+                    prop.children [
+                        Html.div [
+                            prop.className "prose"
+                            prop.children [
+                                Html.h3 "Select ID column from your data!"
+                                Html.small "Shows a preview of the first rows of the data."
+                            ]
+                        ]
+                        TransformData.Main()
+                    ]
+                ]
+            ]
+        ]
+
+    static member AnnotationView() =
+        Html.div [
+
         ]
 
     [<ReactComponent>]
@@ -89,18 +110,31 @@ type View =
             MockData.MapFile
         ), [||])
         let userData, setUserData = React.useState None
-        React.contextProvider( //provide access to the map file
-            App.ReactContext.MapFile,
-            mapFile,
+        let page, setPage = React.useState Pages.LoadData
+        React.contextProvider(
+            App.ReactContext.Pages,
+            {|data = page; setData = setPage|},
             [
-                React.contextProvider( //provide access to the userData
-                    App.ReactContext.UserData,
-                    {| data = userData; setData = setUserData |},
+                React.contextProvider( //provide access to the map file
+                    App.ReactContext.MapFile,
+                    mapFile,
                     [
-                        Html.div [
-                            prop.className "h-screen bg-base-200 flex flex-col overflow-hidden"
-                            prop.children [ View.Navbar(); View.Hero() ]
-                        ]
+                        React.contextProvider( //provide access to the userData
+                            App.ReactContext.UserData,
+                            {| data = userData; setData = setUserData |},
+                            [
+                                Html.div [
+                                    prop.className "h-screen flex flex-col bg-base-300"
+                                    prop.children [
+                                        View.Navbar();
+                                        match page with
+                                        | Pages.LoadData -> View.LoadDataView()
+                                        | Pages.SelectIdCol -> View.SelectIdColView()
+                                        | Pages.Annotation -> View.AnnotationView()
+                                    ]
+                                ]
+                            ]
+                        )
                     ]
                 )
             ]

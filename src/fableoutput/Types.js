@@ -1,8 +1,23 @@
-import { Record } from "./fable_modules/fable-library-js.4.19.0/Types.js";
-import { record_type, array_type, string_type } from "./fable_modules/fable-library-js.4.19.0/Reflection.js";
+import { Record, Union } from "./fable_modules/fable-library-js.4.19.0/Types.js";
+import { record_type, array_type, string_type, union_type } from "./fable_modules/fable-library-js.4.19.0/Reflection.js";
 import { contains, find, tryFindIndex, map, item } from "./fable_modules/fable-library-js.4.19.0/Array.js";
 import { split } from "./fable_modules/fable-library-js.4.19.0/String.js";
 import { stringHash } from "./fable_modules/fable-library-js.4.19.0/Util.js";
+
+export class Pages extends Union {
+    constructor(tag, fields) {
+        super();
+        this.tag = tag;
+        this.fields = fields;
+    }
+    cases() {
+        return ["LoadData", "SelectIdCol", "Annotation"];
+    }
+}
+
+export function Pages_$reflection() {
+    return union_type("App.Pages", [], Pages, () => [[], [], []]);
+}
 
 export class MapFileColumn extends Record {
     constructor(Name, Description, Values) {

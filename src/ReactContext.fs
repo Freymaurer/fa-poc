@@ -8,3 +8,5 @@ open Fable.Core.JsInterop
 let UserData = React.createContext<{|data: UserData option; setData: UserData option -> unit|}> ()
 
 let MapFile = React.createContext<MapFile>()
+
+let Pages = React.createContext<{|data: Pages; setData: Pages -> unit|}> ()

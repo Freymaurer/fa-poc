@@ -1,5 +1,12 @@
 namespace App
 
+
+[<RequireQualifiedAccess>]
+type Pages =
+    | LoadData
+    | SelectIdCol
+    | Annotation
+
 type MapFileColumn =
     {
         Name: string

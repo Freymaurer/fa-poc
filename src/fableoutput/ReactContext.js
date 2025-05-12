@@ -4,3 +4,5 @@ export const UserData = React_createContext_Z10F951C2();
 
 export const MapFile = React_createContext_Z10F951C2();
 
+export const Pages = React_createContext_Z10F951C2();
+

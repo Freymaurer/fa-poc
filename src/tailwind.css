@@ -31,10 +31,10 @@
   --color-warning-content: oklch(100% 0 0);
   --color-error: oklch(57% 0.245 27.325);
   --color-error-content: oklch(100% 0 0);
-  --radius-selector: 2rem;
+  --radius-selector: 0.25rem;
   --radius-field: 0.25rem;
   --radius-box: 0rem;
-  --size-selector: 0.28125rem;
+  --size-selector: 0.21875rem;
   --size-field: 0.25rem;
   --border: 1.5px;
   --depth: 1;
