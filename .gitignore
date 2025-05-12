@@ -206,3 +206,5 @@ out
 # Ignore the Fable compiler output
 *.fs.js
 *.fs.js.map
+
+fableoutput/
