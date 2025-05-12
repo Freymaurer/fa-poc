@@ -1,5 +1,6 @@
 namespace App
 
+type Context<'T> = {data: 'T; setData: 'T -> unit}
 
 [<RequireQualifiedAccess>]
 type Pages =
@@ -63,3 +64,14 @@ type UserData =
         {
             Data = [||]
         }
+
+type AnnotatedFileColumn =
+    {
+        Name: string
+        Values: string []
+    }
+
+type AnnotatedFile =
+    {
+        Columns: AnnotatedFileColumn []
+    }

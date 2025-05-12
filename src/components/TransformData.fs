@@ -64,7 +64,8 @@ type TransformData =
                         ]
                     ]
                 ]
-            |]
+            |],
+            "min-w-0 md:w-[80%]"
         )
 
     static member private InputConfig(mapFile: MapFile, state: State, setState: State -> unit) =
@@ -133,7 +134,8 @@ type TransformData =
         )
 
     [<ReactComponent>]
-    static member private Confirm(state, setState: State -> unit) =
+    static member private Confirm(state) =
+        let loading, setLoading = React.useState(false)
         let disabledMsgs =
             let ra = ResizeArray()
             if state.SelectedColumn.IsNone then
@@ -145,29 +147,61 @@ type TransformData =
             ra.ToArray()
         let isDisabled =
             disabledMsgs.Length > 0
-        Html.div [
-            prop.className "mx-auto h-min flex flex-col justify-center shrink"
-            prop.children [
-                Html.button [
-                    prop.className "btn btn-wide btn-error"
-                    // prop.disabled (state.SelectedColumnType.IsNone || state.TransformColumns.IsEmpty)
-                    prop.onClick (fun _ ->
-                        console.log "Confirmed"
-                    )
-                    prop.disabled isDisabled
-                    prop.text "Confirm"
-                ]
-                Html.div [
-                    prop.className ""
-                    prop.children [
-                        Html.ul [
-                            for msg in disabledMsgs do
-                                Html.li [
-                                    prop.className "text-error"
-                                    prop.children [
-                                        Html.small msg
+        let userDataCtx = React.useContext(App.ReactContext.UserData)
+        let mapFileCtx = React.useContext(App.ReactContext.MapFile)
+        let transformedDataCtx = React.useContext(App.ReactContext.TransformedData)
+        let pageCtx = React.useContext(App.ReactContext.Pages)
+
+        let transform = fun () ->
+            promise {
+                if userDataCtx.data.IsNone then
+                    failwith "Transform: Error: No user data available!"
+                if mapFileCtx.ColumnNames.Length = 0 then
+                    failwith "Transform: Error: No map file available!"
+                if isDisabled then
+                    failwith "Transform: Error: Invalid transform config!"
+                setLoading true
+                do! Promise.sleep 2000
+                let transformedData=
+                    Transform.transform
+                        userDataCtx.data.Value
+                        mapFileCtx
+                        state.SelectedColumn.Value
+                        state.SelectedColumnType.Value
+                        state.TransformColumns
+                transformedDataCtx.setData (Some transformedData)
+                setLoading false
+                pageCtx.setData Pages.Annotation
+            }
+
+
+        React.fragment [
+            if loading then
+                Basic.LoadingModal("Transforming data...")
+            Html.div [
+                prop.className "mx-auto h-min flex flex-col justify-center shrink"
+                prop.children [
+                    Html.button [
+                        prop.className "btn btn-wide btn-primary min-w-3xs"
+                        prop.onClick (fun _ ->
+                            if not isDisabled then
+                                transform()
+                                |> Promise.start
+                        )
+                        prop.disabled isDisabled
+                        prop.text "Confirm"
+                    ]
+                    Html.div [
+                        prop.children [
+                            Html.ul [
+                                for msg in disabledMsgs do
+                                    Html.li [
+                                        prop.className "text-error"
+                                        prop.children [
+                                            Html.small msg
+                                        ]
                                     ]
-                                ]
+                            ]
                         ]
                     ]
                 ]
@@ -215,8 +249,7 @@ type TransformData =
                                 prop.className "self-end flex grow items-end"
                                 prop.children [
                                     TransformData.Confirm(
-                                        state,
-                                        setState
+                                        state
                                     )
                                 ]
                             ]

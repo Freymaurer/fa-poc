@@ -152,7 +152,7 @@ module MappingColumns =
                 |]
         }
 
-let MapFile =
+let MapFile: MapFile =
     {
         Columns =
             [|

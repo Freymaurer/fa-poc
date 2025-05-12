@@ -204,6 +204,5 @@ out
 .ionide
 
 # Ignore the Fable compiler output
-/fableoutput
 *.fs.js
 *.fs.js.map
