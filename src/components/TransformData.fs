@@ -7,10 +7,11 @@ open Fable.Core.JsInterop
 type private State = {
     SelectedColumn: int option
     SelectedColumnType: string option
+    SkipFirstRow: bool
     TransformColumns: string list
 } with
     static member init() =
-        { SelectedColumn = None; SelectedColumnType = None; TransformColumns = [] }
+        { SelectedColumn = None; SelectedColumnType = None; TransformColumns = []; SkipFirstRow = true }
 
 type TransformData =
 
@@ -74,6 +75,21 @@ type TransformData =
             "Input Config",
             state.SelectedColumnType.IsSome,
             [|
+                "Skip first row",
+                Html.label [
+                    prop.className "label select-none"
+                    prop.children [
+                        Html.input [
+                            prop.type'.checkbox
+                            prop.className "checkbox"
+                            prop.isChecked state.SkipFirstRow
+                            prop.onChange (fun (isChecked: bool) ->
+                                setState {state with SkipFirstRow = isChecked}
+                            )
+                        ]
+                        Html.text "Skip first row"
+                    ]
+                ];
                 "Select id column type",
                 Html.select [
                     prop.className "select"
@@ -111,6 +127,23 @@ type TransformData =
             [|
                 "Select annotation types",
                 React.fragment [
+                    Html.label [
+                        prop.className "label select-none"
+                        prop.children [
+                            Html.input [
+                                prop.type'.checkbox
+                                prop.className "checkbox"
+                                prop.isChecked (List.ofArray names = state.TransformColumns)
+                                prop.onChange (fun (isChecked: bool) ->
+                                    if isChecked then
+                                        setState {state with TransformColumns = List.ofArray mapFile.ColumnNames}
+                                    else
+                                        setState {state with TransformColumns = []}
+                                )
+                            ]
+                            Html.text "Select all"
+                        ]
+                    ]
                     for name in names do
                         Html.label [
                             prop.className "label select-none"
@@ -168,6 +201,7 @@ type TransformData =
                         mapFileCtx
                         state.SelectedColumn.Value
                         state.SelectedColumnType.Value
+                        state.SkipFirstRow
                         state.TransformColumns
                 transformedDataCtx.setData (Some transformedData)
                 setLoading false

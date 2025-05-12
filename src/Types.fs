@@ -8,6 +8,13 @@ type Pages =
     | SelectIdCol
     | Annotation
 
+type AnnotatedValue =
+    {
+        Input: string
+        FoundInMapFile: bool
+        AnnotatedValues: string option []
+    }
+
 type MapFileColumn =
     {
         Name: string
@@ -39,22 +46,48 @@ type MapFile =
         |> _.Values
         |> Array.tryFindIndex (fun v -> v = key)
 
-    member this.getValuesByIndex(index: int, ?columnNames: string []) =
+    member this.tryFindIndices(columnName: string, keys: string []) =
+        let values =
+            this.Columns
+            |> Array.find(fun c -> c.Name = columnName)
+            |> _.Values
+
+        keys
+        |> Array.map (fun key ->
+            values
+            |> Array.tryFindIndex (fun v -> v = key)
+        )
+
+
+    member this.annotateValues(inputColumnName: string, inputIds: string [], ?columnNames: string list) =
         let columnNames =
             match columnNames with
             | Some names -> names
-            | None -> this.ColumnNames
+            | None -> this.ColumnNames |> List.ofArray
 
-        this.Columns
-        |> Array.filter (fun c -> Array.contains c.Name columnNames)
-        |> Array.map (fun c ->
-            {|
-                name = c.Name;
-                values =
-                    c.Values.[index].Trim()
-                    |> _.Split("; ") // can be manyOf relationships
-            |}
-        )
+        let columns =
+            this.Columns
+            |> Array.filter (fun c -> List.contains c.Name columnNames)
+
+        let values =
+            inputIds
+            |> Array.map (fun userId ->
+                let indexOpt = this.tryFindIndex(inputColumnName, userId)
+                {
+                    Input = userId
+                    FoundInMapFile = indexOpt.IsSome
+                    AnnotatedValues =
+                        match indexOpt with
+                        | Some index ->
+                            columns
+                            |> Array.map (fun column -> column.Values.[index].Trim() |> Some)
+                        | None ->
+                            Array.init columns.Length (fun _ ->
+                                None
+                            )
+                }
+            )
+        columns |> Array.map _.Name, values
 
 type UserData =
     {
@@ -65,13 +98,33 @@ type UserData =
             Data = [||]
         }
 
-type AnnotatedFileColumn =
-    {
-        Name: string
-        Values: string []
-    }
-
 type AnnotatedFile =
     {
-        Columns: AnnotatedFileColumn []
+        InputColumn: string
+        ColumnNames: string []
+        AnnotatedValues: AnnotatedValue []
     }
+
+    member this.ToTsv() =
+
+        let ra = ResizeArray()
+
+        this.ColumnNames
+        |> Array.map (fun c -> c.Trim())
+        |> String.concat "\t"
+        |> fun x -> $"{this.InputColumn}\t{x}"
+        |> ra.Add
+
+        this.AnnotatedValues
+        |> Array.iter (fun v ->
+
+            ra.Add ($"{v.Input}\t")
+
+            v.AnnotatedValues
+            |> Array.map (fun a -> a |> Option.map _.Trim() |> Option.defaultValue "None")
+            |> String.concat "\t"
+            |> ra.Add
+        )
+
+        ra
+        |> String.concat "\n"

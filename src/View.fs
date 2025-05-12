@@ -94,10 +94,15 @@ type View =
 
     [<ReactComponent>]
     static member AnnotationView() =
-        let transformedDataCtx = React.useContext(App.ReactContext.TransformedData)
         Basic.OverflowContainer (
-            Html.div [
-                prop.text "Test"
+            React.fragment [
+                Html.div [
+                    prop.className "prose"
+                    prop.children [
+                        Html.h3 "Review Annotated File!"
+                    ]
+                ]
+                Annotation.Main()
             ]
         )
 
