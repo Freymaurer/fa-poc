@@ -12,17 +12,19 @@ module private AnnotationUtil =
 
 type Annotation =
 
-    static member private DownloadButton(file: AnnotatedFile) =
+    [<ReactComponent>]
+    static member private DownloadButton(file: IDataFrame) =
+        let userDataCtx = React.useContext(App.ReactContext.UserData)
         Html.button [
             prop.className "btn btn-primary btn-wide"
             prop.onClick (fun _ ->
-                let tsv = file.ToTsv()
-                let filename =
-                    file.InputColumn
-                    + "_"
-                    + (file.ColumnNames |> String.concat "_")
-                    + ".tsv"
-                AnnotationUtil.downloadFromString(filename, tsv)
+                promise {
+                    let fileName =
+                        let index = userDataCtx.data.Value.FileName.LastIndexOf "."
+                        userDataCtx.data.Value.FileName.Substring(0, index) + "_annotated"
+                    do! Danfojs.dfd.toCSV(file, {| sep = "\t"; fileName = fileName; download = true |})
+                }
+                |> Promise.start
             )
             prop.children [
                 Icons.Download
@@ -30,7 +32,7 @@ type Annotation =
             ]
         ]
 
-    static member AnnotatedFileTable(file: AnnotatedFile) =
+    static member AnnotatedFileTable(file: IDataFrame) =
         Html.div [
             prop.className "overflow-auto grow"
             prop.children [
@@ -38,27 +40,17 @@ type Annotation =
                     prop.className "table"
                     prop.children [
                         Html.thead [ Html.tr [
-                            Html.th [
-                                prop.text file.InputColumn
-                            ]
-                            for name in file.ColumnNames do
+                            for name in file.columns do
                                 Html.th [
                                     prop.text name
                                 ]
                         ] ]
                         Html.tbody [
-                            for row in file.AnnotatedValues do
+                            for row in file.values.[1..] do
                                 Html.tr [
-                                    Html.td [
-                                        prop.text row.Input
-                                    ]
-                                    for value in row.AnnotatedValues do
+                                    for value in row do
                                         Html.td [
-                                            match value with
-                                            | Some v ->
-                                                prop.text v
-                                            | None ->
-                                                prop.text "None"
+                                            prop.text (unbox<string> value)
                                         ]
                                 ]
                         ]

@@ -6,6 +6,8 @@
     "clean": "dotnet fable clean src --yes"
   },
   "dependencies": {
+    "@nfdi4plants/exceljs": "^0.3.0",
+    "danfojs": "^1.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -1,5 +1,6 @@
 namespace App
 
+open Fetch
 open Feliz
 open Feliz.Router
 
@@ -108,46 +109,93 @@ type View =
 
     [<ReactComponent>]
     static member Main() =
-        let mapFile = React.useMemo ((fun () ->
-            console.log "Loading mock data"
-            MockData.MapFile
-        ), [||])
+        let loading, setLoading = React.useState true
         let (userData: UserData option), setUserData = React.useState None
         let (page: Pages), setPage = React.useState Pages.LoadData
-        let (transformedData: AnnotatedFile option), setTransformedData = React.useState None
-        React.contextProvider(
-            App.ReactContext.TransformedData,
-            {data = transformedData; setData = setTransformedData},
-            [
-                React.contextProvider(
-                    App.ReactContext.Pages,
-                    {data = page; setData = setPage},
-                    [
-                        React.contextProvider( //provide access to the map file
-                            App.ReactContext.MapFile,
-                            mapFile,
-                            [
-                                React.contextProvider( //provide access to the userData
-                                    App.ReactContext.UserData,
-                                    { data = userData; setData = setUserData },
-                                    [
-                                        // Basic.LoadingModal("Transforming data...")
-                                        Html.div [
-                                            prop.className "h-screen flex flex-col bg-base-300"
-                                            prop.children [
-                                                View.Navbar();
-                                                match page with
-                                                | Pages.LoadData -> View.LoadDataView()
-                                                | Pages.SelectIdCol -> View.ConfigView()
-                                                | Pages.Annotation -> View.AnnotationView()
+        let (transformedData), setTransformedData = React.useState None
+        let (mapFileInfo: DataMapMappingFileInfo option), setMapFileInfo = React.useState None
+
+        React.useEffectOnce ((fun () ->
+            promise {
+                console.log "Loading mapping file..."
+                let! datamap = FetchHelper.fetchDataMap Constants.URL.DEFAULT_DATAMAP
+                let info = DataMapMappingFileInfo.fromDataMap(Constants.URL.DEFAULT_DATAMAP, datamap)
+                setMapFileInfo (Some info)
+                setLoading false
+            }
+            |> Promise.catch(fun e ->
+                Browser.Dom.window.alert "Error loading mapping file"
+                console.error e
+                setLoading false
+            )
+            |> Promise.start
+        ))
+
+        // React.useEffectOnce(
+        //     (fun () ->
+        //         // verify merge
+
+        //         let data = [|[|"K0"; "k0"; "A0"; "B0"|]; [|"k0"; "K1"; "A1"; "B1"|];
+        //             [|"K1"; "K0"; "A2"; "B2"|]; [|"K2"; "K2"; "A3"; "B3"|]|]
+
+        //         let data2 = [|[|"K0"; "k0"; "C0"; "D0"|]; [|"K1"; "K0"; "C1"; "D1"|];
+        //                     [|"K1"; "K0"; "C2"; "D2"|]; [|"K2"; "K0"; "C3"; "D3"|]|]
+
+        //         let colum1 = [|"Key1"; "Key2"; "A"; "B"|]
+        //         let colum2 = [|"Key1"; "Key2"; "A"; "D"|]
+
+        //         let df1 = Danfojs.dfd.DataFrame(data, {| columns = colum1 |})
+        //         let df2 = Danfojs.dfd.DataFrame(data2, {| columns = colum2 |})
+        //         df1.print()
+        //         df2.print()
+
+        //         let merge_df = Danfojs.dfd.merge(
+        //             left = df1,
+        //             right = df2,
+        //             on = [|"Key1"|],
+        //             how = "left"
+        //         )
+        //         merge_df.print()
+        //     )
+        // )
+
+        React.fragment [
+            if loading then
+                Basic.LoadingModal("Loading mapping file...")
+            React.contextProvider(
+                App.ReactContext.TransformedData,
+                {data = transformedData; setData = setTransformedData},
+                [
+                    React.contextProvider(
+                        App.ReactContext.Pages,
+                        {data = page; setData = setPage},
+                        [
+                            React.contextProvider( //provide access to the map file
+                                App.ReactContext.DataMapMappingFileInfo,
+                                mapFileInfo,
+                                [
+                                    React.contextProvider( //provide access to the userData
+                                        App.ReactContext.UserData,
+                                        { data = userData; setData = setUserData },
+                                        [
+                                            // Basic.LoadingModal("Transforming data...")
+                                            Html.div [
+                                                prop.className "h-screen flex flex-col bg-base-300"
+                                                prop.children [
+                                                    View.Navbar();
+                                                    match page with
+                                                    | Pages.LoadData -> View.LoadDataView()
+                                                    | Pages.SelectIdCol -> View.ConfigView()
+                                                    | Pages.Annotation -> View.AnnotationView()
+                                                ]
                                             ]
                                         ]
-                                    ]
-                                )
-                            ]
-                        )
-                    ]
-                )
-            ]
-        )
+                                    )
+                                ]
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
 

@@ -7,124 +7,126 @@ type Pages =
     | LoadData
     | SelectIdCol
     | Annotation
-
-type AnnotatedValue =
+type DataMapMappingFile =
     {
-        Input: string
-        FoundInMapFile: bool
-        AnnotatedValues: string option []
+        AnnotationFilePath: string
+        SourceIdentifierColIndex: int
+        SourceIdentifier: string
+        SourceOrganism: string
+        AnnotationType: string
     }
 
-type MapFileColumn =
+type DataMapMappingFileInfo =
     {
-        Name: string
-        Description: string
-        Values: string []
+        DataMapUrl: string
+        AnnotationFiles: DataMapMappingFile []
     }
 
-type MapFile =
-    {
-        Columns: MapFileColumn []
-    }
+    static member make (url: string) (annotationFiles: DataMapMappingFile []) =
+        {
+            DataMapUrl = url
+            AnnotationFiles = annotationFiles
+        }
 
-    /// Length of all column values must be the same
-    member this.IsValid =
-        if this.Columns.Length = 0 then
-            false
-        else
-            let length = this.Columns.[0].Values.Length
-            this.Columns
-            |> Array.forall (fun c -> c.Values.Length = length)
+    static member private findFromComments(comments: ResizeArray<ARCtrl.Comment>, key: string): string =
+        comments.ToArray()
+        |> Array.tryFind (fun c -> c.Name.IsSome && c.Name.Value.ToLower() = key.ToLower())
+        |> Option.bind (fun c -> c.Value)
+        |> function
+            | None -> failwith $"Key {key} not found in comments"
+            | Some v -> v
 
-    member this.ColumnNames =
-        this.Columns
-        |> Array.map (fun c -> c.Name)
+    member this.Organisms =
+        this.AnnotationFiles
+        |> Array.map (fun f -> f.SourceOrganism)
+        |> Array.distinct
 
-    member this.tryFindIndex(columnName: string, key: string) =
-        this.Columns
-        |> Array.find(fun c -> c.Name = columnName)
-        |> _.Values
-        |> Array.tryFindIndex (fun v -> v = key)
+    member this.SourceIdentifiersByOrganism(organism: string) =
+        this.AnnotationFiles
+        |> Array.filter (fun f -> f.SourceOrganism = organism)
+        |> Array.map (fun f -> f.SourceIdentifier)
+        |> Array.distinct
 
-    member this.tryFindIndices(columnName: string, keys: string []) =
-        let values =
-            this.Columns
-            |> Array.find(fun c -> c.Name = columnName)
-            |> _.Values
+    member this.AnnotationTypesByOrganismAndSourceIdentifier(organism: string, sourceIdentifer: string) =
+        this.AnnotationFiles
+        |> Array.filter (fun f -> f.SourceOrganism = organism && f.SourceIdentifier = sourceIdentifer)
+        |> Array.map (fun f -> f.AnnotationType)
+        |> Array.distinct
 
-        keys
-        |> Array.map (fun key ->
-            values
-            |> Array.tryFindIndex (fun v -> v = key)
+    static member fromDataMap(dataMapUrl: string, dataMap: ARCtrl.DataMap) =
+        dataMap.DataContexts
+        |> Array.ofSeq
+        |> Array.filter (fun x ->
+            let ft = DataMapMappingFileInfo.findFromComments (x.Comments, "file type")
+            ft.ToLower() = "annotation file"
         )
+        |> Array.map (fun context ->
+            {
+                AnnotationFilePath = context.Name.Value
+                SourceIdentifierColIndex = context.Name.Value.Split("#col=") |> Array.last |> int
+                SourceIdentifier = context.Explication.Value.NameText
+                SourceOrganism = DataMapMappingFileInfo.findFromComments (context.Comments, "organism")
+                AnnotationType = DataMapMappingFileInfo.findFromComments (context.Comments, "annotation type")
+            }
+        )
+        |> Array.distinctBy (fun f ->
+            f.SourceIdentifier,
+            f.SourceOrganism,
+            f.AnnotationType
+        )
+        |> DataMapMappingFileInfo.make dataMapUrl
+
+    member this.GetFetchUrl(file: DataMapMappingFile) : string =
+        let baseUrl = this.DataMapUrl
+        let truncatedFilePath =
+            let trimmed = file.AnnotationFilePath.TrimStart([|'.'|])
+            let removeSelector = trimmed.Remove(trimmed.IndexOf("#"))
+            removeSelector
+        let firstFragment = truncatedFilePath.Split([|"/"|], System.StringSplitOptions.RemoveEmptyEntries).[0]
+        let index = baseUrl.IndexOf(firstFragment)
+        let baseUrl = baseUrl.Remove(index)
+        let fullPath = baseUrl + truncatedFilePath
+        fullPath
+
+    member this.GetFetchUrl(sourceOrganism: string, sourceIdent: string, annotation: string) : string =
+        let file = this.AnnotationFiles |> Array.tryFind (fun f ->
+            f.SourceOrganism = sourceOrganism &&
+            f.SourceIdentifier = sourceIdent &&
+            f.AnnotationType = annotation
+        )
+        match file with
+        | None -> failwith $"File not found for {sourceOrganism}, {sourceIdent}, {annotation}"
+        | Some file ->
+            this.GetFetchUrl file
 
 
-    member this.annotateValues(inputColumnName: string, inputIds: string [], ?columnNames: string list) =
-        let columnNames =
-            match columnNames with
-            | Some names -> names
-            | None -> this.ColumnNames |> List.ofArray
+    member this.GetFile(sourceOrganism: string, sourceIdent: string, annotation: string) : DataMapMappingFile =
+        let file = this.AnnotationFiles |> Array.tryFind (fun f ->
+            f.SourceOrganism = sourceOrganism &&
+            f.SourceIdentifier = sourceIdent &&
+            f.AnnotationType = annotation
+        )
+        match file with
+        | None -> failwith $"File not found for {sourceOrganism}, {sourceIdent}, {annotation}"
+        | Some file -> file
 
-        let columns =
-            this.Columns
-            |> Array.filter (fun c -> List.contains c.Name columnNames)
-
-        let values =
-            inputIds
-            |> Array.map (fun userId ->
-                let indexOpt = this.tryFindIndex(inputColumnName, userId)
-                {
-                    Input = userId
-                    FoundInMapFile = indexOpt.IsSome
-                    AnnotatedValues =
-                        match indexOpt with
-                        | Some index ->
-                            columns
-                            |> Array.map (fun column -> column.Values.[index].Trim() |> Some)
-                        | None ->
-                            Array.init columns.Length (fun _ ->
-                                None
-                            )
-                }
-            )
-        columns |> Array.map _.Name, values
+type TransformState = {
+    SkipFirstRow: bool
+    SelectedColumn: int option
+    SelectedOrganism: string option
+    SelectedSourceIdentifier: string option
+    TargetAnnotations: string list
+} with
+    static member init() =
+        { SelectedColumn = None; SelectedOrganism = None; SelectedSourceIdentifier = None; TargetAnnotations = []; SkipFirstRow = true }
 
 type UserData =
     {
+        FileName: string
         Data: string [] []
     } with
     static member init () =
         {
+            FileName = ""
             Data = [||]
         }
-
-type AnnotatedFile =
-    {
-        InputColumn: string
-        ColumnNames: string []
-        AnnotatedValues: AnnotatedValue []
-    }
-
-    member this.ToTsv() =
-
-        let ra = ResizeArray()
-
-        this.ColumnNames
-        |> Array.map (fun c -> c.Trim())
-        |> String.concat "\t"
-        |> fun x -> $"{this.InputColumn}\t{x}"
-        |> ra.Add
-
-        this.AnnotatedValues
-        |> Array.iter (fun v ->
-
-            ra.Add ($"{v.Input}\t")
-
-            v.AnnotatedValues
-            |> Array.map (fun a -> a |> Option.map _.Trim() |> Option.defaultValue "None")
-            |> String.concat "\t"
-            |> ra.Add
-        )
-
-        ra
-        |> String.concat "\n"

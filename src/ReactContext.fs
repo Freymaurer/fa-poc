@@ -4,12 +4,10 @@ open Feliz
 open Fable.Core.JsInterop
 
 // importDefault "react"
-
 let UserData = React.createContext<Context<UserData option>> ()
 
-let MapFile = React.createContext<MapFile>()
+let DataMapMappingFileInfo = React.createContext<DataMapMappingFileInfo option>()
 
 let Pages = React.createContext<Context<Pages>> ()
 
-let TransformedData =
-    React.createContext<Context<AnnotatedFile option>> ()
+let TransformedData = React.createContext<Context<IDataFrame option>> ()

@@ -117,8 +117,14 @@ type prop with
     static member inline dataColumnId (id: int) =
         Interop.mkAttr "data-columnid" id
 
+[<Global>]
+type performance =
+    static member now() : int = jsNative
+
 type console =
     static member log (message: obj) = Browser.Dom.console.log message
+
+    static member error (message: obj) = Browser.Dom.console.error message
 
 [<RequireQualifiedAccess>]
 module StaticFile =
