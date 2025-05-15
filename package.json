@@ -1,5 +1,6 @@
 {
   "private": true,
+  "version": "0.0.1",
   "scripts": {
     "start": "dotnet tool restore && dotnet fable watch src -o src/fableoutput --run vite",
     "build": "dotnet tool restore && dotnet fable src -o src/fableoutput --run vite build",

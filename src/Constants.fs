@@ -1,5 +1,10 @@
 module App.Constants
 
+open Fable.Core
+
+[<Emit("__APP_VERSION__")>]
+let __VERSION__ : string = jsNative
+
 module URL =
 
     [<Literal>]
