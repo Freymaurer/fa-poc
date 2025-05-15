@@ -24,16 +24,11 @@ let transform (userData: UserData) (mapFile: DataMapMappingFileInfo) (transformC
             )
         )
 
-    let userDataIds =
-        userData.Data
-        |> Array.map (fun row ->
-            match transformConfig.SelectedColumn with
-            | Some column -> Array.singleton row.[column]
-            | None -> failwith "No column selected"
-        )
-        |> fun x -> if transformConfig.SkipFirstRow then x.[1..] else x
+    let userDataHead, userDataBody = userData.Data |> Array.splitAt 1
+    let userDataHead = userDataHead.[0]
+    let userDataIdColumnName = userDataHead.[transformConfig.SelectedColumn.Value]
 
-    let mutable df = Danfojs.dfd.DataFrame( userDataIds, {|columns = [|transformConfig.SelectedSourceIdentifier.Value|]|})
+    let mutable df = Danfojs.dfd.DataFrame( userDataBody, {|columns = userDataHead|})
 
     promise {
         for file in annotationFiles do
@@ -46,9 +41,9 @@ let transform (userData: UserData) (mapFile: DataMapMappingFileInfo) (transformC
             )
             // csv.print()
             csv.rename(Fable.Core.JsInterop.createObj [
-                csv.columns.[file.SourceIdentifierColIndex - 1], transformConfig.SelectedSourceIdentifier.Value
+                csv.columns.[file.SourceIdentifierColIndex - 1], userDataIdColumnName
             ])
-            df <- Danfojs.dfd.merge(df, csv, [|transformConfig.SelectedSourceIdentifier.Value|], "left")
+            df <- Danfojs.dfd.merge(df, csv, [|userDataIdColumnName|], "left")
         df.print()
         return df
     }
