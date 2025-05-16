@@ -114,12 +114,13 @@ type View =
         let (transformedData), setTransformedData = React.useState None
         let (mapFileInfo: DataMapMappingFileInfo option), setMapFileInfo = React.useState None
         let (currentUrl, updateUrl) = React.useState(Router.currentUrl())
+        let datamapUrl, _ = React.useLocalStorage(Constants.LocalStorage.Keys.__DATAMAP_URL__, Constants.URL.DEFAULT_DATAMAP)
 
         React.useEffectOnce ((fun () ->
             promise {
                 console.log "Loading mapping file..."
-                let! datamap = FetchHelper.fetchDataMap Constants.URL.DEFAULT_DATAMAP
-                let info = DataMapMappingFileInfo.fromDataMap(Constants.URL.DEFAULT_DATAMAP, datamap)
+                let! datamap = FetchHelper.fetchDataMap datamapUrl
+                let info = DataMapMappingFileInfo.fromDataMap(datamapUrl, datamap)
                 setMapFileInfo (Some info)
                 setLoading false
             }
