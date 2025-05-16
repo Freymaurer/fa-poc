@@ -21,6 +21,7 @@ type Settings =
         let datamapUrl, setDatamapUrl = React.useLocalStorage(Constants.LocalStorage.Keys.__DATAMAP_URL__, Constants.URL.DEFAULT_DATAMAP)
         let datamapInfoCtx = React.useContext(App.ReactContext.DataMapMappingFileInfo)
         let tempDatamapUrl, setTempDatamapUrl = React.useState (datamapUrl)
+        let loading, setLoading = React.useState false
         let inputRef = React.useInputRef()
 
         let tryLoadDataMap =
@@ -36,6 +37,10 @@ type Settings =
                 )
 
         React.fragment [
+
+            if loading then
+                Basic.LoadingModal("Loading mapping file...")
+
             Html.label [
                 prop.className "label"
                 prop.text "Datamap URL"
@@ -61,11 +66,14 @@ type Settings =
                         prop.className "btn join-item"
                         prop.onClick (fun _ ->
                             promise {
+                                setLoading true
                                 let! response = tryLoadDataMap tempDatamapUrl
                                 match response with
                                 | Ok _ ->
+                                    setLoading false
                                     setDatamapUrl tempDatamapUrl
                                 | Error e ->
+                                    setLoading false
                                     Browser.Dom.window.alert "Error loading mapping file. See console for details."
                                     console.error e
                             }
