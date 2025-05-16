@@ -131,3 +131,7 @@ module StaticFile =
 
     /// Function that imports a static file by it's relative path.
     let inline import (path: string) : string = importDefault<string> path
+
+type React with
+    [<ImportMember("@uidotdev/usehooks")>]
+    static member inline useLocalStorage<'T>(key: string, initialValue: 'T): ('T * ('T -> unit)) = jsNative

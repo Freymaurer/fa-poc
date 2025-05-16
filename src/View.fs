@@ -5,23 +5,6 @@ open Feliz
 open Feliz.Router
 
 type View =
-    // /// <summary>
-    // /// A React component that uses Feliz.Router
-    // /// to determine what to show based on the current URL
-    // /// </summary>
-    // [<ReactComponent>]
-    // static member Router() =
-    //     let (currentUrl, updateUrl) = React.useState(Router.currentUrl())
-    //     React.router [
-    //         router.onUrlChanged updateUrl
-    //         router.children [
-    //             match currentUrl with
-    //             | [ ] -> Html.h1 "Index"
-    //             | [ "hello" ] -> Components.HelloWorld()
-    //             | [ "counter" ] -> Components.Counter()
-    //             | otherwise -> Html.h1 "Not found"
-    //         ]
-    //     ]
 
     static member Navbar() =
         Html.div [
@@ -30,12 +13,21 @@ type View =
                 Html.div [
                     prop.className "flex-1"
                     prop.children [
-                        Html.a [ prop.className "btn btn-ghost text-xl"; prop.text "fa-poc"; prop.href "." ]
+                        Html.a [ prop.className "btn btn-ghost text-xl"; prop.text "fa-poc"; prop.href "/" ]
                     ]
                 ]
                 Html.div [
                     prop.className "flex-none"
                     prop.children [
+                        Html.a [
+                            prop.href "/#settings"
+                            prop.className "btn btn-square btn-ghost text-xl"
+                            prop.dangerouslySetInnerHTML // https://icon-sets.iconify.design/?query=github
+                                """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+	<rect width="24" height="24" fill="none" />
+	<path fill="currentColor" d="m9.25 22l-.4-3.2q-.325-.125-.612-.3t-.563-.375L4.7 19.375l-2.75-4.75l2.575-1.95Q4.5 12.5 4.5 12.338v-.675q0-.163.025-.338L1.95 9.375l2.75-4.75l2.975 1.25q.275-.2.575-.375t.6-.3l.4-3.2h5.5l.4 3.2q.325.125.613.3t.562.375l2.975-1.25l2.75 4.75l-2.575 1.95q.025.175.025.338v.674q0 .163-.05.338l2.575 1.95l-2.75 4.75l-2.95-1.25q-.275.2-.575.375t-.6.3l-.4 3.2zm2.8-6.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.488 1.025T8.55 12t1.013 2.475T12.05 15.5" />
+</svg>"""
+                        ]
                         Html.a [
                             prop.href Constants.URL.GitHub
                             prop.target "_blank"
@@ -107,6 +99,13 @@ type View =
             ]
         )
 
+    static member SettingsView() =
+        Basic.OverflowContainer (
+            React.fragment [
+                Settings.Main()
+            ]
+        )
+
     [<ReactComponent>]
     static member Main() =
         let loading, setLoading = React.useState true
@@ -114,6 +113,7 @@ type View =
         let (page: Pages), setPage = React.useState Pages.LoadData
         let (transformedData), setTransformedData = React.useState None
         let (mapFileInfo: DataMapMappingFileInfo option), setMapFileInfo = React.useState None
+        let (currentUrl, updateUrl) = React.useState(Router.currentUrl())
 
         React.useEffectOnce ((fun () ->
             promise {
@@ -131,34 +131,6 @@ type View =
             |> Promise.start
         ))
 
-        // React.useEffectOnce(
-        //     (fun () ->
-        //         // verify merge
-
-        //         let data = [|[|"K0"; "k0"; "A0"; "B0"|]; [|"k0"; "K1"; "A1"; "B1"|];
-        //             [|"K1"; "K0"; "A2"; "B2"|]; [|"K2"; "K2"; "A3"; "B3"|]|]
-
-        //         let data2 = [|[|"K0"; "k0"; "C0"; "D0"|]; [|"K1"; "K0"; "C1"; "D1"|];
-        //                     [|"K1"; "K0"; "C2"; "D2"|]; [|"K2"; "K0"; "C3"; "D3"|]|]
-
-        //         let colum1 = [|"Key1"; "Key2"; "A"; "B"|]
-        //         let colum2 = [|"Key1"; "Key2"; "A"; "D"|]
-
-        //         let df1 = Danfojs.dfd.DataFrame(data, {| columns = colum1 |})
-        //         let df2 = Danfojs.dfd.DataFrame(data2, {| columns = colum2 |})
-        //         df1.print()
-        //         df2.print()
-
-        //         let merge_df = Danfojs.dfd.merge(
-        //             left = df1,
-        //             right = df2,
-        //             on = [|"Key1"|],
-        //             how = "left"
-        //         )
-        //         merge_df.print()
-        //     )
-        // )
-
         React.fragment [
             if loading then
                 Basic.LoadingModal("Loading mapping file...")
@@ -172,7 +144,7 @@ type View =
                         [
                             React.contextProvider( //provide access to the map file
                                 App.ReactContext.DataMapMappingFileInfo,
-                                mapFileInfo,
+                                {data = mapFileInfo; setData = setMapFileInfo},
                                 [
                                     React.contextProvider( //provide access to the userData
                                         App.ReactContext.UserData,
@@ -183,10 +155,21 @@ type View =
                                                 prop.className "h-screen flex flex-col bg-base-300"
                                                 prop.children [
                                                     View.Navbar();
-                                                    match page with
-                                                    | Pages.LoadData -> View.LoadDataView()
-                                                    | Pages.SelectIdCol -> View.ConfigView()
-                                                    | Pages.Annotation -> View.AnnotationView()
+                                                    React.router [
+                                                        router.onUrlChanged updateUrl
+                                                        router.children [
+                                                            match currentUrl with
+                                                            | [ ] ->
+                                                                match page with
+                                                                | Pages.LoadData -> View.LoadDataView()
+                                                                | Pages.SelectIdCol -> View.ConfigView()
+                                                                | Pages.Annotation -> View.AnnotationView()
+                                                            | ["settings"] ->
+                                                                View.SettingsView()
+                                                            | otherwise -> Html.h1 "Not found"
+                                                        ]
+                                                    ]
+
                                                 ]
                                             ]
                                         ]

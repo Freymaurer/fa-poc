@@ -216,7 +216,7 @@ type TransformData =
             promise {
                 if userDataCtx.data.IsNone then
                     failwith "Transform: Error: No user data available!"
-                if mapFileCtx.IsNone then
+                if mapFileCtx.data.IsNone then
                     failwith "Transform: Error: No map file available!"
                 if isDisabled then
                     failwith "Transform: Error: Invalid transform config!"
@@ -225,7 +225,7 @@ type TransformData =
                 let! transformedData=
                     Transform.transform
                         userDataCtx.data.Value
-                        mapFileCtx.Value
+                        mapFileCtx.data.Value
                         state
                 transformedDataCtx.setData (Some transformedData)
                 setLoading false
@@ -290,9 +290,9 @@ type TransformData =
         match truncatedData, mapFile with
         | [||], _ ->
             Html.h1 "No data loaded"
-        | _, None ->
+        | _, { data = None } ->
             Html.h1 "No mapping file loaded"
-        | userData, Some mapFile ->
+        | userData, { data = Some mapFile } ->
             Html.div [
                 prop.className "flex lg:flex-row flex-col min-h-0 gap-2"
                 prop.children [

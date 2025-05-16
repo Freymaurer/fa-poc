@@ -5,6 +5,12 @@ open Fable.Core
 [<Emit("__APP_VERSION__")>]
 let __VERSION__ : string = jsNative
 
+module LocalStorage =
+
+    module Keys =
+        [<Literal>]
+        let __DATAMAP_URL__ = "__DATAMAP_URL__"
+
 module URL =
 
     [<Literal>]

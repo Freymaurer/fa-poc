@@ -15,6 +15,7 @@
         <Compile Include="components/LoadData.fs" />
         <Compile Include="components/TransformData.fs" />
         <Compile Include="components/Annotation.fs" />
+        <Compile Include="components/Settings.fs" />
         <Compile Include="View.fs" />
         <Compile Include="Main.fs" />
         <None Include="index.html" />
