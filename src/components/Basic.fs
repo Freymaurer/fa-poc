@@ -77,3 +77,47 @@ type Basic =
             ],
             Browser.Dom.document.body
         )
+
+    [<ReactComponent>]
+    static member Pagination(
+        currentPage: int,
+        totalPages: int,
+        updatePage: int -> unit
+    ) =
+        Html.div [
+            prop.className "join"
+            prop.children [
+                Html.button [
+                    prop.className "join-item btn"
+                    prop.onClick (fun _ -> updatePage(0))
+                    prop.text 1
+                    if currentPage = 0 then
+                        prop.disabled true
+                ]
+                Html.button [
+                    prop.className "join-item btn"
+                    prop.onClick (fun _ -> updatePage(currentPage - 1))
+                    prop.text "«"
+                    if currentPage = 0 then
+                        prop.disabled true
+                ]
+                Html.div [
+                    prop.className "join-item btn btn-active cursor-default"
+                    prop.textf "Page: %i" (currentPage + 1)
+                ]
+                Html.button [
+                    prop.className "join-item btn"
+                    prop.onClick (fun _ -> updatePage(currentPage + 1))
+                    prop.text "»"
+                    if currentPage = totalPages - 1 then
+                        prop.disabled true
+                ]
+                Html.button [
+                    prop.className "join-item btn"
+                    prop.onClick (fun _ -> updatePage(totalPages - 1))
+                    prop.text totalPages
+                    if currentPage = totalPages - 1 then
+                        prop.disabled true
+                ]
+            ]
+        ]

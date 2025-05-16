@@ -22,6 +22,7 @@ type IDataFrame =
     abstract member item: string -> ISeries
     [<Emit("$0.rename($1, { inplace: true })")>]
     abstract member rename: obj -> unit
+    abstract member fillNa: obj -> IDataFrame
 
 [<Erase; Global>]
 type IDFD =

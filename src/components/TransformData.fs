@@ -221,7 +221,6 @@ type TransformData =
                 if isDisabled then
                     failwith "Transform: Error: Invalid transform config!"
                 setLoading true
-                do! Promise.sleep 2000
                 let! transformedData=
                     Transform.transform
                         userDataCtx.data.Value
@@ -231,6 +230,11 @@ type TransformData =
                 setLoading false
                 pageCtx.setData Pages.Annotation
             }
+            |> Promise.catch (fun ex ->
+                Browser.Dom.window.alert "Error transforming data. See console for details."
+                console.error ex
+                setLoading false
+            )
 
 
         React.fragment [

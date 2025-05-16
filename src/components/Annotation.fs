@@ -16,7 +16,7 @@ type Annotation =
     static member private DownloadButton(file: IDataFrame) =
         let userDataCtx = React.useContext(App.ReactContext.UserData)
         Html.button [
-            prop.className "btn btn-primary btn-wide"
+            prop.className "btn btn-primary md:btn-wide"
             prop.onClick (fun _ ->
                 promise {
                     let fileName =
@@ -32,28 +32,69 @@ type Annotation =
             ]
         ]
 
+    [<ReactComponent>]
     static member AnnotatedFileTable(file: IDataFrame) =
+
+        let currentBin, setCurrentBin = React.useState 0
+
+        let BinSize = 100
+
+        let TotalBins = React.useMemo((fun () -> System.Math.Max(file.values.Length / BinSize, 1)), [| file |])
+
+        let values = React.useMemo(
+            (fun () ->
+                let start = currentBin * BinSize
+                file.fillNa("null").values.[1..]
+                |> Array.skip start
+                |> Array.truncate BinSize
+            ),
+            [| file; currentBin |]
+        )
         Html.div [
-            prop.className "overflow-auto grow"
+            prop.className "min-h-0 grow flex flex-col gap-2"
             prop.children [
-                Html.table [
-                    prop.className "table"
+                Html.div [
+                    prop.className "overflow-auto grow border border-base-content/5"
                     prop.children [
-                        Html.thead [ Html.tr [
-                            for name in file.columns do
-                                Html.th [
-                                    prop.text name
-                                ]
-                        ] ]
-                        Html.tbody [
-                            for row in file.values.[1..] do
-                                Html.tr [
-                                    for value in row do
-                                        Html.td [
-                                            prop.text (unbox<string> value)
+                        Html.table [
+                            prop.className "table table-xs"
+                            prop.children [
+                                Html.thead [ Html.tr [
+                                    Html.th [
+                                        prop.text "Index"
+                                    ]
+                                    for name in file.columns do
+                                        Html.th [
+                                            prop.text name
+                                        ]
+                                ] ]
+                                Html.tbody [
+                                    for i in 0 .. values.Length - 1 do
+                                        let row = values.[i]
+                                        let index = (i + 1) + (currentBin * BinSize)
+                                        Html.tr [
+                                            Html.td index
+                                            for value in row do
+                                                Html.td [
+                                                    prop.text (unbox<string> value)
+                                                ]
                                         ]
                                 ]
+                            ]
                         ]
+                    ]
+                ]
+                Basic.Pagination(
+                    currentPage = currentBin,
+                    totalPages = TotalBins,
+                    updatePage = (fun page ->
+                        setCurrentBin page
+                    )
+                )
+                Html.div [
+                    prop.className "self-end flex items-end grow-0"
+                    prop.children [
+                        Annotation.DownloadButton file
                     ]
                 ]
             ]
@@ -66,16 +107,4 @@ type Annotation =
         | None ->
             Html.div "No transformed data available"
         | Some transformedData ->
-            Html.div [
-                prop.className "flex min-h-0 flex-col md:flex-row gap-2 lg:gap-4"
-                prop.children [
-                    Annotation.AnnotatedFileTable transformedData
-                    Html.div [
-                        prop.className "self-end flex items-end grow-0 min-w-3xs"
-                        prop.children [
-                            Annotation.DownloadButton transformedData
-                        ]
-                    ]
-
-                ]
-            ]
+            Annotation.AnnotatedFileTable transformedData

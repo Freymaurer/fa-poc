@@ -40,9 +40,12 @@ let transform (userData: UserData) (mapFile: DataMapMappingFileInfo) (transformC
                 |}
             )
             // csv.print()
-            csv.rename(Fable.Core.JsInterop.createObj [
-                csv.columns.[file.SourceIdentifierColIndex - 1], userDataIdColumnName
-            ])
+            if not (csv.columns.[file.SourceIdentifierColIndex - 1] = userDataIdColumnName) then
+                // rename the column to match the user data
+                // this is a bit of a hack, but it works for now
+                csv.rename(Fable.Core.JsInterop.createObj [
+                    csv.columns.[file.SourceIdentifierColIndex - 1], userDataIdColumnName
+                ])
             df <- Danfojs.dfd.merge(df, csv, [|userDataIdColumnName|], "left")
         df.print()
         return df

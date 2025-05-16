@@ -58,9 +58,8 @@ type View =
                                 Html.p [
                                     prop.className "py-6"
                                     prop.text
-                                        "Currently file upload is not supported. \
-                                        You can use provided mock data to explore beta \
-                                        features."
+                                        "You can either upload your own tab seperated data, \
+                                        or try the provided mock data!"
                                 ]
                                 LoadData.Main()
                             ]
